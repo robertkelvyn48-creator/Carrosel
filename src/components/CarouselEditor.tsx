@@ -362,9 +362,10 @@ export const CarouselEditor: React.FC = () => {
                 className="w-full bg-zinc-950 p-3.5 rounded-xl border border-white/10 text-zinc-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none"
               >
                 <option value="#000000">Preto Puro (#000000)</option>
-                <option value="#0f0f0f">Chumbo Escuro (#0f0f0f)</option>
-                <option value="#18181b">Grafite (#18181b)</option>
-                <option value="#262626">Cinza Escuro (#262626)</option>
+                <option value="#030303">Preto Suave 1 (#030303)</option>
+                <option value="#050505">Preto Suave 2 (#050505)</option>
+                <option value="#080808">Preto Suave 3 (#080808)</option>
+                <option value="#0a0a0a">Preto Suave 4 (#0a0a0a)</option>
               </select>
               <Layers className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={18} />
             </div>
