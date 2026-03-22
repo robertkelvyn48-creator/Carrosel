@@ -22,6 +22,7 @@ interface Slide {
   textWidth?: number;
   textColor?: string;
   highlightColor?: string;
+  isAutoLayout?: boolean;
 }
 
 // Função para redimensionar a imagem antes de enviar para a API (melhora a velocidade)
@@ -201,6 +202,7 @@ export const CarouselEditor: React.FC = () => {
               imageOffsetY: 0,
               showFooter: true,
               loading: true,
+              isAutoLayout: true,
             });
           };
           reader.readAsDataURL(file);
@@ -249,6 +251,7 @@ export const CarouselEditor: React.FC = () => {
         offsetY: sourceSlide.offsetY,
         textColor: sourceSlide.textColor,
         highlightColor: sourceSlide.highlightColor,
+        isAutoLayout: sourceSlide.isAutoLayout,
       };
     }));
   };
@@ -263,25 +266,31 @@ export const CarouselEditor: React.FC = () => {
       if (slides.length === 1) {
         const canvas = canvasRefs.current.get(slides[0].id);
         if (canvas) {
-          const dataUrl = canvas.toDataURL('image/png');
-          const a = document.createElement('a');
-          a.href = dataUrl;
-          a.download = `slide-1.png`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
+          const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `slide-1.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
         }
       } else {
         const zip = new JSZip();
         
-        slides.forEach((slide, index) => {
+        for (let index = 0; index < slides.length; index++) {
+          const slide = slides[index];
           const canvas = canvasRefs.current.get(slide.id);
           if (canvas) {
-            const dataUrl = canvas.toDataURL('image/png');
-            const base64Data = dataUrl.split(',')[1];
-            zip.file(`slide-${index + 1}.png`, base64Data, { base64: true });
+            const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (blob) {
+              zip.file(`slide-${index + 1}.png`, blob);
+            }
           }
-        });
+        }
         
         const content = await zip.generateAsync({ type: 'blob' });
         const url = URL.createObjectURL(content);
@@ -291,7 +300,7 @@ export const CarouselEditor: React.FC = () => {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
     } catch (error) {
       console.error("Erro ao exportar carrossel", error);
@@ -741,7 +750,8 @@ const SlideCard: React.FC<SlideCardProps> = ({
     
     onUpdate({ 
       offsetX: dragState.initialTextOffsetX + deltaX,
-      offsetY: dragState.initialTextOffsetY + deltaY
+      offsetY: dragState.initialTextOffsetY + deltaY,
+      isAutoLayout: false
     });
   };
 
@@ -837,8 +847,11 @@ const SlideCard: React.FC<SlideCardProps> = ({
         const groupTop = currentY;
 
         // 2. Sombra/Gradiente Escuro para esconder o texto original (suavizado)
-        const solidStart = groupTop + 60; // Começa o preto sólido mais abaixo para cobrir bem
-        const gradientHeight = 400; // Altura do degradê muito maior para transição suave
+        // Garantir que a sombra SEMPRE cubra pelo menos os 35% inferiores da imagem
+        // onde o texto original costuma ficar, independente do tamanho do texto novo.
+        const minSolidY = canvas.height * 0.65; // 65% para baixo é sólido
+        const solidStart = Math.min(groupTop + 60, minSolidY);
+        const gradientHeight = 500; // Transição bem suave
         const gradientStart = solidStart - gradientHeight;
 
         const rgb = hexToRgb(overlayColor);
@@ -1054,7 +1067,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
             </label>
             <div className="flex gap-2 items-center">
               <button 
-                onClick={() => onUpdate({ offsetX: 0 })}
+                onClick={() => onUpdate({ offsetX: 0, isAutoLayout: false })}
                 className="text-xs bg-zinc-900 hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
                 title="Centralizar texto horizontalmente"
               >
@@ -1073,7 +1086,23 @@ const SlideCard: React.FC<SlideCardProps> = ({
           <div>
             <textarea
               value={slide.text}
-              onChange={(e) => onUpdate({ text: e.target.value })}
+              onChange={(e) => {
+                const newText = e.target.value;
+                const updates: Partial<Slide> = { text: newText };
+                
+                if (slide.isAutoLayout !== false) {
+                  const len = newText.length;
+                  if (len < 50) { updates.fontSize = 84; updates.textWidth = 0.85; }
+                  else if (len < 100) { updates.fontSize = 76; updates.textWidth = 0.90; }
+                  else if (len < 150) { updates.fontSize = 68; updates.textWidth = 0.90; }
+                  else if (len < 200) { updates.fontSize = 60; updates.textWidth = 0.95; }
+                  else { updates.fontSize = 52; updates.textWidth = 0.95; }
+                  updates.offsetY = 0;
+                  updates.offsetX = 0;
+                }
+                
+                onUpdate(updates);
+              }}
               placeholder="Digite o texto principal aqui..."
               className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3.5 text-sm text-zinc-200 focus:border-indigo-500 outline-none resize-none h-24 transition-colors"
             />
@@ -1128,7 +1157,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
             <label className="text-xs font-medium text-zinc-400 mb-2 flex items-center justify-between">
               <span>Tamanho da Fonte</span>
               <button
-                onClick={() => onUpdate({ offsetX: 0, offsetY: 0, fontSize: 84 })}
+                onClick={() => onUpdate({ offsetX: 0, offsetY: 0, fontSize: 84, textWidth: 0.85, isAutoLayout: true })}
                 className="text-[10px] text-zinc-500 hover:text-indigo-400 flex items-center gap-1 transition-colors"
                 title="Resetar Posição e Tamanho"
               >
@@ -1141,7 +1170,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
                 min="40" 
                 max="150" 
                 value={slide.fontSize} 
-                onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+                onChange={(e) => onUpdate({ fontSize: Number(e.target.value), isAutoLayout: false })}
                 className="flex-1 accent-indigo-500"
               />
               <input 
@@ -1149,7 +1178,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
                 min="40" 
                 max="150" 
                 value={slide.fontSize} 
-                onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+                onChange={(e) => onUpdate({ fontSize: Number(e.target.value), isAutoLayout: false })}
                 className="w-16 bg-zinc-900 border border-white/10 rounded-lg p-1.5 text-sm text-center text-zinc-200 outline-none focus:border-indigo-500"
               />
             </div>
@@ -1166,7 +1195,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
                 max="1.0" 
                 step="0.01"
                 value={slide.textWidth || 0.85} 
-                onChange={(e) => onUpdate({ textWidth: Number(e.target.value) })}
+                onChange={(e) => onUpdate({ textWidth: Number(e.target.value), isAutoLayout: false })}
                 className="flex-1 accent-indigo-500"
               />
               <div className="w-16 bg-zinc-900 border border-white/10 rounded-lg p-1.5 text-sm text-center text-zinc-200 flex items-center justify-center">
