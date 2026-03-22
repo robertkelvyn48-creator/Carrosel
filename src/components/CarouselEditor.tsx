@@ -20,6 +20,7 @@ interface Slide {
   showFooter: boolean;
   loading: boolean;
   textWidth?: number;
+  textColor?: string;
   highlightColor?: string;
 }
 
@@ -60,16 +61,33 @@ const resizeImageForAPI = (dataUrl: string, maxSize: number = 800): Promise<stri
 export const CarouselEditor: React.FC = () => {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [aspectRatio, setAspectRatio] = useState<AspectRatio>('1080x1350');
+  const [aspectRatio, setAspectRatio] = useState<AspectRatio>(() => {
+    return (localStorage.getItem('carousel_aspectRatio') as AspectRatio) || '1080x1350';
+  });
   const [logoImage, setLogoImage] = useState<string | null>(() => {
     return localStorage.getItem('carousel_logo') || null;
   });
-  const [showLogo, setShowLogo] = useState(true);
-  const [footerText, setFooterText] = useState('ARRASTE PRO LADO>>');
-  const [footerFontSize, setFooterFontSize] = useState(29);
+  const [showLogo, setShowLogo] = useState(() => {
+    const saved = localStorage.getItem('carousel_showLogo');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [footerText, setFooterText] = useState(() => {
+    return localStorage.getItem('carousel_footerText') || 'ARRASTE PRO LADO>>';
+  });
+  const [footerFontSize, setFooterFontSize] = useState(() => {
+    const saved = localStorage.getItem('carousel_footerFontSize');
+    return saved ? parseInt(saved, 10) : 29;
+  });
+  const [globalFont, setGlobalFont] = useState(() => {
+    return localStorage.getItem('carousel_globalFont') || 'Bebas Neue Pro';
+  });
+  const [customFontUrl, setCustomFontUrl] = useState<string | null>(() => {
+    return localStorage.getItem('carousel_customFont') || null;
+  });
   const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const fontInputRef = useRef<HTMLInputElement>(null);
   const canvasRefs = useRef<Map<string, HTMLCanvasElement>>(new Map());
 
   const dimensions = {
@@ -94,6 +112,48 @@ export const CarouselEditor: React.FC = () => {
       return () => clearTimeout(timeoutId);
     }
   }, [slides, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('carousel_aspectRatio', aspectRatio);
+      localStorage.setItem('carousel_showLogo', String(showLogo));
+      localStorage.setItem('carousel_footerText', footerText);
+      localStorage.setItem('carousel_footerFontSize', String(footerFontSize));
+      localStorage.setItem('carousel_globalFont', globalFont);
+      if (customFontUrl) {
+        try {
+          localStorage.setItem('carousel_customFont', customFontUrl);
+        } catch (e) {
+          console.warn('Font too large for localStorage');
+        }
+      } else {
+        localStorage.removeItem('carousel_customFont');
+      }
+    }
+  }, [aspectRatio, showLogo, footerText, footerFontSize, globalFont, customFontUrl, isLoaded]);
+
+  useEffect(() => {
+    if (customFontUrl) {
+      const font = new FontFace('CustomOrganetto', `url(${customFontUrl})`);
+      font.load().then((loadedFont) => {
+        document.fonts.add(loadedFont);
+      }).catch((error) => {
+        console.error('Error loading custom font:', error);
+      });
+    }
+  }, [customFontUrl]);
+
+  const handleFontUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setCustomFontUrl(base64);
+      setGlobalFont('Organetto Bold'); // Auto-select when uploaded
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -183,6 +243,8 @@ export const CarouselEditor: React.FC = () => {
         textWidth: sourceSlide.textWidth,
         offsetX: sourceSlide.offsetX,
         offsetY: sourceSlide.offsetY,
+        textColor: sourceSlide.textColor,
+        highlightColor: sourceSlide.highlightColor,
       };
     }));
   };
@@ -246,6 +308,46 @@ export const CarouselEditor: React.FC = () => {
           <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
             <Settings2 size={16} /> Configurações Globais
           </h3>
+
+          <div>
+            <label className="text-sm font-medium text-zinc-300 mb-2 block">Fonte Principal</label>
+            <div className="relative mb-2">
+              <select 
+                value={globalFont} 
+                onChange={(e) => setGlobalFont(e.target.value)}
+                className="w-full bg-zinc-950 p-3.5 rounded-xl border border-white/10 text-zinc-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none"
+              >
+                <option value="Bebas Neue Pro">Bebas Neue Pro</option>
+                <option value="Bebas Neue Regular">Bebas Neue Regular</option>
+                <option value="Organetto Bold">Organetto Bold</option>
+              </select>
+              <TypeIcon className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={18} />
+            </div>
+            
+            {globalFont === 'Organetto Bold' && (
+              <div className="mt-3">
+                <input
+                  type="file"
+                  accept=".ttf,.otf,.woff,.woff2"
+                  className="hidden"
+                  ref={fontInputRef}
+                  onChange={handleFontUpload}
+                />
+                <button
+                  onClick={() => fontInputRef.current?.click()}
+                  className="w-full py-2.5 px-4 bg-zinc-900 hover:bg-zinc-800 border border-white/10 rounded-xl text-sm font-medium text-zinc-300 transition-all flex items-center justify-center gap-2"
+                >
+                  <Upload size={16} />
+                  {customFontUrl ? 'Trocar arquivo da fonte' : 'Fazer upload da fonte (.ttf/.otf)'}
+                </button>
+                {customFontUrl && (
+                  <p className="text-xs text-emerald-400 mt-2 text-center">
+                    ✓ Fonte personalizada carregada
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
           <div>
             <label className="text-sm font-medium text-zinc-300 mb-2 block">Proporção do Carrossel</label>
@@ -373,6 +475,8 @@ export const CarouselEditor: React.FC = () => {
                     showLogo={showLogo}
                     footerText={footerText}
                     footerFontSize={footerFontSize}
+                    globalFont={globalFont}
+                    customFontUrl={customFontUrl}
                     onRemove={() => removeSlide(slide.id)}
                     onUpdate={(updates) => handleUpdateSlide(slide.id, updates)}
                     onApplyStyleToAll={() => handleApplyStyleToAll(slide)}
@@ -437,6 +541,7 @@ const drawColoredText = (
   line: string, 
   centerX: number, 
   y: number, 
+  textColor: string,
   highlightColor: string,
   initialHighlight: boolean = false
 ): boolean => {
@@ -468,7 +573,7 @@ const drawColoredText = (
   ctx.textAlign = 'left'; 
   
   chunks.forEach(chunk => {
-    ctx.fillStyle = chunk.isHighlight ? highlightColor : '#ffef58';
+    ctx.fillStyle = chunk.isHighlight ? highlightColor : textColor;
     ctx.fillText(chunk.text, currentX, y);
     currentX += ctx.measureText(chunk.text).width;
   });
@@ -485,6 +590,8 @@ interface SlideCardProps {
   showLogo: boolean;
   footerText: string;
   footerFontSize: number;
+  globalFont: string;
+  customFontUrl: string | null;
   onRemove: () => void; 
   onUpdate: (updates: Partial<Slide>) => void;
   onApplyStyleToAll: () => void;
@@ -499,6 +606,8 @@ const SlideCard: React.FC<SlideCardProps> = ({
   showLogo,
   footerText,
   footerFontSize,
+  globalFont,
+  customFontUrl,
   onRemove, 
   onUpdate,
   onApplyStyleToAll,
@@ -645,6 +754,18 @@ const SlideCard: React.FC<SlideCardProps> = ({
     document.fonts.ready.then(() => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
+      const getFontString = (size: number) => {
+        switch (globalFont) {
+          case 'Bebas Neue Regular':
+            return `normal ${size}px "Bebas Neue", sans-serif`;
+          case 'Organetto Bold':
+            return `bold ${size}px ${customFontUrl ? '"CustomOrganetto"' : '"Organetto Bold"'}, "Montserrat", sans-serif`;
+          case 'Bebas Neue Pro':
+          default:
+            return `bold ${size}px "Bebas Neue", sans-serif`;
+        }
+      };
+
       // 1. Desenha a imagem de fundo (cover)
       const img = bgImage;
       const logoImg = showLogo ? watermarkImg : null;
@@ -656,7 +777,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
       ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
       
       // 3. Cálculos de Agrupamento (Marca d'água + Texto)
-        ctx.font = `${slide.fontSize}px "Bebas Neue", sans-serif`;
+        ctx.font = getFontString(slide.fontSize);
         const maxWidth = canvas.width * (slide.textWidth || 0.85);
         const lines = slide.text ? getLines(ctx, slide.text.toUpperCase(), maxWidth) : [];
         const lineHeight = slide.fontSize * 1.05;
@@ -735,7 +856,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
         // 5. Desenha o Texto Principal
         if (slide.text) {
           ctx.fillStyle = '#ffef58'; // Cor padrão original
-          ctx.font = `${slide.fontSize}px "Bebas Neue", sans-serif`;
+          ctx.font = getFontString(slide.fontSize);
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
           
@@ -754,7 +875,15 @@ const SlideCard: React.FC<SlideCardProps> = ({
             const lineWidth = ctx.measureText(cleanLine).width;
             if (lineWidth > actualMaxWidth) actualMaxWidth = lineWidth;
             
-            currentHighlight = drawColoredText(ctx, line.trim(), groupCenterX, currentY, slide.highlightColor || '#ffef58', currentHighlight);
+            currentHighlight = drawColoredText(
+              ctx, 
+              line.trim(), 
+              groupCenterX, 
+              currentY, 
+              slide.textColor || '#ffffff',
+              slide.highlightColor || '#ffef58', 
+              currentHighlight
+            );
             currentY += lineHeight;
           });
           
@@ -775,7 +904,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
         // 6. Desenha o Rodapé
         if (footerText && slide.showFooter !== false) {
           ctx.fillStyle = 'white';
-          ctx.font = `${footerFontSize}px "Bebas Neue", sans-serif`;
+          ctx.font = getFontString(footerFontSize);
           ctx.textAlign = 'center';
           ctx.textBaseline = 'bottom';
           ctx.fillText(footerText, canvas.width / 2, canvas.height * 0.96);
@@ -883,13 +1012,6 @@ const SlideCard: React.FC<SlideCardProps> = ({
               <TypeIcon size={14} /> Texto Principal
             </label>
             <div className="flex gap-2 items-center">
-              <input 
-                type="color" 
-                value={slide.highlightColor || '#ffef58'} 
-                onChange={(e) => onUpdate({ highlightColor: e.target.value })}
-                className="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent"
-                title="Cor de Destaque"
-              />
               <button 
                 onClick={() => onUpdate({ offsetX: 0 })}
                 className="text-xs bg-zinc-900 hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
@@ -914,7 +1036,51 @@ const SlideCard: React.FC<SlideCardProps> = ({
               placeholder="Digite o texto principal aqui..."
               className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3.5 text-sm text-zinc-200 focus:border-indigo-500 outline-none resize-none h-24 transition-colors"
             />
-            <p className="text-[10px] text-zinc-500 mt-1">Dica: Envolva palavras com *asteriscos* para aplicar a cor de destaque.</p>
+            <div className="flex flex-col gap-3 mt-3">
+              <p className="text-[10px] text-zinc-500">Dica: Envolva palavras com *asteriscos* para aplicar a cor de destaque.</p>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Cor Principal</label>
+                  <div className="flex items-center gap-1.5 bg-zinc-900 border border-white/10 rounded-lg p-1.5">
+                    <input 
+                      type="color" 
+                      value={slide.textColor || '#ffffff'} 
+                      onChange={(e) => onUpdate({ textColor: e.target.value })}
+                      className="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent"
+                      title="Cor do Texto"
+                    />
+                    <input
+                      type="text"
+                      value={slide.textColor || '#ffffff'}
+                      onChange={(e) => onUpdate({ textColor: e.target.value })}
+                      className="w-16 bg-transparent text-xs font-mono text-zinc-300 outline-none uppercase"
+                      maxLength={7}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Cor de Destaque</label>
+                  <div className="flex items-center gap-1.5 bg-zinc-900 border border-white/10 rounded-lg p-1.5">
+                    <input 
+                      type="color" 
+                      value={slide.highlightColor || '#ffef58'} 
+                      onChange={(e) => onUpdate({ highlightColor: e.target.value })}
+                      className="w-6 h-6 rounded cursor-pointer border-0 p-0 bg-transparent"
+                      title="Cor de Destaque"
+                    />
+                    <input
+                      type="text"
+                      value={slide.highlightColor || '#ffef58'}
+                      onChange={(e) => onUpdate({ highlightColor: e.target.value })}
+                      className="w-16 bg-transparent text-xs font-mono text-zinc-300 outline-none uppercase"
+                      maxLength={7}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div>
