@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Upload, Download, Settings2, Layers, Plus, Trash2, Loader2, Image as ImageIcon, MoveVertical, Type as TypeIcon, AlignCenter, LayoutTemplate, RotateCcw, Minus } from 'lucide-react';
+import { Upload, Download, Settings2, Layers, Plus, Trash2, Loader2, Image as ImageIcon, MoveVertical, Type as TypeIcon, AlignCenter, LayoutTemplate, RotateCcw, Minus, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { extractTextFromImage } from '../services/geminiService';
 import { get, set } from 'idb-keyval';
@@ -235,22 +235,17 @@ export const CarouselEditor: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0C10] text-zinc-100 p-4 md:p-6 flex flex-col md:flex-row gap-6 font-sans">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 md:p-6 flex flex-col md:flex-row gap-6 font-sans">
       {/* Sidebar de Controle */}
-      <aside className="w-full md:w-80 bg-[#1F2833] p-6 rounded-3xl shadow-2xl shadow-black/50 border border-white/5 flex flex-col gap-6 shrink-0 md:h-[calc(100vh-3rem)] md:sticky md:top-6 overflow-y-auto custom-scrollbar">
+      <aside className="w-full md:w-80 bg-zinc-900 p-6 rounded-3xl shadow-2xl shadow-black/50 border border-white/5 flex flex-col gap-6 shrink-0 md:h-[calc(100vh-3rem)] md:sticky md:top-6 overflow-y-auto custom-scrollbar">
         <h1 className="text-2xl font-black flex items-center gap-3 text-white tracking-tight">
-          <Layers className="text-[#45A29E]" size={28} /> Editor de Carrossel
+          <Layers className="text-indigo-400" size={28} /> Editor de Carrossel
         </h1>
         
         <div className="space-y-5 pt-5 border-t border-white/10">
-          <h3 className="text-xs font-bold text-[#45A29E] uppercase tracking-widest flex items-center gap-2">
+          <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
             <Settings2 size={16} /> Configurações Globais
           </h3>
-          
-          <div className="bg-[#0B0C10]/50 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
-            <span className="text-sm font-medium text-zinc-400">Template Ativo</span>
-            <span className="text-xs font-bold bg-[#45A29E]/20 text-[#66FCF1] px-3 py-1.5 rounded-lg">Bebas Neue Pro</span>
-          </div>
 
           <div>
             <label className="text-sm font-medium text-zinc-300 mb-2 block">Proporção do Carrossel</label>
@@ -258,7 +253,7 @@ export const CarouselEditor: React.FC = () => {
               <select 
                 value={aspectRatio} 
                 onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                className="w-full bg-[#0B0C10] p-3.5 rounded-xl border border-white/10 text-zinc-200 focus:border-[#66FCF1] focus:ring-1 focus:ring-[#66FCF1] outline-none transition-all appearance-none"
+                className="w-full bg-zinc-950 p-3.5 rounded-xl border border-white/10 text-zinc-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none"
               >
                 <option value="1080x1350">1080x1350 (Retrato)</option>
                 <option value="1080x1346">1080x1346</option>
@@ -269,21 +264,21 @@ export const CarouselEditor: React.FC = () => {
         </div>
 
         <div className="space-y-5 pt-5 border-t border-white/10">
-          <div className="bg-[#0B0C10]/50 border border-white/5 rounded-2xl p-5">
+          <div className="bg-zinc-950/50 border border-white/5 rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <label className="text-sm font-bold text-zinc-200">Marca d'água (Logo)</label>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" className="sr-only peer" checked={showLogo} onChange={() => setShowLogo(!showLogo)} />
-                <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#45A29E]"></div>
+                <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
               </label>
             </div>
             
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => logoInputRef.current?.click()}
-                className="w-full bg-[#1F2833] hover:bg-[#2c3947] border border-white/10 p-3.5 rounded-xl text-sm text-zinc-200 flex items-center justify-center gap-2 transition-colors font-medium shadow-sm"
+                className="w-full bg-zinc-900 hover:bg-zinc-800 border border-white/10 p-3.5 rounded-xl text-sm text-zinc-200 flex items-center justify-center gap-2 transition-colors font-medium shadow-sm"
               >
-                <ImageIcon size={18} className="text-[#45A29E]" /> {logoImage ? 'Trocar Imagem da Logo' : 'Enviar Imagem da Logo'}
+                <ImageIcon size={18} className="text-indigo-400" /> {logoImage ? 'Trocar Imagem da Logo' : 'Enviar Imagem da Logo'}
               </button>
               {logoImage && (
                 <button
@@ -298,21 +293,21 @@ export const CarouselEditor: React.FC = () => {
             <input type="file" ref={logoInputRef} onChange={handleLogoUpload} className="hidden" accept="image/*" />
           </div>
 
-          <div className="bg-[#0B0C10]/50 border border-white/5 rounded-2xl p-4">
+          <div className="bg-zinc-950/50 border border-white/5 rounded-2xl p-4">
             <label className="text-xs font-bold text-zinc-400 block mb-2 uppercase tracking-wider">Rodapé Padrão</label>
             <div className="flex gap-2">
               <input 
                 type="text" 
                 value={footerText}
                 onChange={(e) => setFooterText(e.target.value)}
-                className="flex-1 bg-[#1F2833] p-2.5 rounded-lg border border-white/10 text-zinc-200 text-sm focus:border-[#66FCF1] outline-none transition-colors"
+                className="flex-1 bg-zinc-900 p-2.5 rounded-lg border border-white/10 text-zinc-200 text-sm focus:border-indigo-500 outline-none transition-colors"
                 placeholder="Texto do rodapé"
               />
               <input 
                 type="number" 
                 value={footerFontSize}
                 onChange={(e) => setFooterFontSize(Number(e.target.value))}
-                className="w-16 bg-[#1F2833] border border-white/10 rounded-lg p-2.5 text-sm text-center text-zinc-200 outline-none focus:border-[#66FCF1]"
+                className="w-16 bg-zinc-900 border border-white/10 rounded-lg p-2.5 text-sm text-center text-zinc-200 outline-none focus:border-indigo-500"
                 title="Tamanho da Fonte"
               />
             </div>
@@ -326,6 +321,14 @@ export const CarouselEditor: React.FC = () => {
           >
             <Plus size={20} /> Adicionar Slides
           </button>
+          {slides.length > 0 && (
+            <button 
+              onClick={() => setSlides([])}
+              className="w-full bg-red-500/10 hover:bg-red-500/20 p-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-colors border border-red-500/20 text-red-400"
+            >
+              <Trash2 size={20} /> Apagar Todos os Slides
+            </button>
+          )}
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -340,7 +343,7 @@ export const CarouselEditor: React.FC = () => {
           <button 
             onClick={handleExport}
             disabled={slides.length === 0 || isExporting || slides.some(s => s.loading)}
-            className="w-full bg-[#45A29E] hover:bg-[#66FCF1] hover:text-[#0B0C10] text-white disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed p-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-[#45A29E]/20"
+            className="w-full bg-indigo-500 hover:bg-indigo-400 text-white disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed p-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-500/20"
           >
             {isExporting ? (
               <><Loader2 size={20} className="animate-spin" /> Baixando...</>
@@ -355,7 +358,7 @@ export const CarouselEditor: React.FC = () => {
       </aside>
 
       {/* Área de Visualização (Scroll Horizontal) */}
-      <main className="w-full md:flex-1 bg-[#1F2833]/30 rounded-3xl border border-white/5 p-6 md:p-8 overflow-hidden flex flex-col md:h-[calc(100vh-3rem)] relative">
+      <main className="w-full md:flex-1 bg-zinc-900/30 rounded-3xl border border-white/5 p-6 md:p-8 overflow-hidden flex flex-col md:h-[calc(100vh-3rem)] relative">
         {slides.length > 0 ? (
           <div className="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar pb-6">
             <div className="flex flex-row gap-8 h-full items-center px-4 w-max">
@@ -387,13 +390,13 @@ export const CarouselEditor: React.FC = () => {
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="w-32 h-32 rounded-full bg-[#1F2833] border border-white/5 flex items-center justify-center mb-2 shadow-2xl"
+              className="w-32 h-32 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center mb-2 shadow-2xl"
             >
-              <ImageIcon size={56} className="text-[#45A29E]/50" />
+              <ImageIcon size={56} className="text-indigo-500/50" />
             </motion.div>
             <h2 className="text-3xl font-bold text-white tracking-tight">Nenhum slide adicionado</h2>
             <p className="max-w-md text-center text-zinc-400 text-lg leading-relaxed">
-              Clique em <span className="text-[#45A29E] font-semibold">Adicionar Slides</span> no painel lateral para começar a montar o seu carrossel.
+              Clique em <span className="text-indigo-400 font-semibold">Adicionar Slides</span> no painel lateral para começar a montar o seu carrossel.
             </p>
           </div>
         )}
@@ -514,6 +517,9 @@ const SlideCard: React.FC<SlideCardProps> = ({
   // Cache das imagens para evitar recarregamento no canvas a cada frame
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
   const [watermarkImg, setWatermarkImg] = useState<HTMLImageElement | null>(null);
+  
+  const [isImageControlsOpen, setIsImageControlsOpen] = useState(false);
+  const [isFooterControlsOpen, setIsFooterControlsOpen] = useState(false);
 
   useEffect(() => {
     const img = new Image();
@@ -677,7 +683,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
 
         // 2. Sombra/Gradiente Escuro para esconder o texto original (reduzido)
         const solidStart = groupTop + 40; // Começa o preto sólido mais abaixo
-        const gradientHeight = 150; // Altura do degradê menor
+        const gradientHeight = 80; // Altura do degradê menor
         const gradientStart = solidStart - gradientHeight;
 
         const gradient = ctx.createLinearGradient(0, gradientStart, 0, solidStart);
@@ -805,14 +811,14 @@ const SlideCard: React.FC<SlideCardProps> = ({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.8, y: 20 }}
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
-      className="w-[340px] md:w-[420px] shrink-0 bg-[#1F2833] border border-white/10 rounded-3xl p-5 flex flex-col gap-5 relative group shadow-2xl h-full overflow-y-auto custom-scrollbar"
+      className="w-[85vw] max-w-[380px] md:w-[420px] md:max-w-none shrink-0 bg-zinc-900 border border-white/10 rounded-3xl p-5 flex flex-col gap-5 relative group shadow-2xl h-full overflow-y-auto custom-scrollbar"
     >
       <div className="flex justify-between items-center px-1">
         <span className="text-sm font-black text-white tracking-wider uppercase bg-white/10 px-3 py-1 rounded-full">Slide {index + 1}</span>
         <div className="flex gap-2">
           <button 
             onClick={() => {
-              const canvas = document.getElementById(`canvas-${slide.id}`) as HTMLCanvasElement;
+              const canvas = internalRef.current;
               if (canvas) {
                 const dataUrl = canvas.toDataURL('image/png');
                 const a = document.createElement('a');
@@ -823,7 +829,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
                 document.body.removeChild(a);
               }
             }}
-            className="text-zinc-400 hover:text-[#66FCF1] hover:bg-[#66FCF1]/10 transition-colors p-2 rounded-xl"
+            className="text-zinc-400 hover:text-indigo-400 hover:bg-indigo-400/10 transition-colors p-2 rounded-xl"
             title="Baixar slide"
           >
             <Download size={18} />
@@ -839,10 +845,11 @@ const SlideCard: React.FC<SlideCardProps> = ({
       </div>
 
       <div 
-        className="relative w-full rounded-2xl overflow-hidden bg-[#0B0C10] flex items-center justify-center border border-white/5 shadow-inner shrink-0" 
+        className="relative w-full rounded-2xl overflow-hidden bg-zinc-950 flex items-center justify-center border border-white/5 shadow-inner shrink-0" 
         style={{ aspectRatio: `${dimensions.width}/${dimensions.height}` }}
       >
         <canvas 
+          id={`canvas-${slide.id}`}
           ref={(el) => {
             internalRef.current = el;
             canvasRef(el);
@@ -860,9 +867,9 @@ const SlideCard: React.FC<SlideCardProps> = ({
         />
         
         {slide.loading && (
-          <div className="absolute inset-0 bg-[#0B0C10]/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
-            <Loader2 className="animate-spin text-[#45A29E]" size={40} />
-            <span className="text-sm font-bold text-[#66FCF1] tracking-widest uppercase">Analisando...</span>
+          <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-md flex flex-col items-center justify-center gap-4">
+            <Loader2 className="animate-spin text-indigo-500" size={40} />
+            <span className="text-sm font-bold text-indigo-400 tracking-widest uppercase">Analisando...</span>
           </div>
         )}
       </div>
@@ -870,9 +877,9 @@ const SlideCard: React.FC<SlideCardProps> = ({
       {/* Controles de Edição do Slide */}
       <div className="space-y-5 pb-2">
         {/* Controles de Texto */}
-        <div className="flex flex-col gap-4 bg-[#0B0C10]/50 p-4 rounded-2xl border border-white/5">
+        <div className="flex flex-col gap-4 bg-zinc-950/50 p-4 rounded-2xl border border-white/5">
           <div className="flex justify-between items-center">
-            <label className="text-xs font-bold text-[#45A29E] uppercase tracking-widest flex items-center gap-2">
+            <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
               <TypeIcon size={14} /> Texto Principal
             </label>
             <div className="flex gap-2 items-center">
@@ -885,14 +892,14 @@ const SlideCard: React.FC<SlideCardProps> = ({
               />
               <button 
                 onClick={() => onUpdate({ offsetX: 0 })}
-                className="text-xs bg-[#1F2833] hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
+                className="text-xs bg-zinc-900 hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
                 title="Centralizar texto horizontalmente"
               >
                 <AlignCenter size={12} /> Centralizar
               </button>
               <button 
                 onClick={onApplyStyleToAll}
-                className="text-xs bg-[#1F2833] hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
+                className="text-xs bg-zinc-900 hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
                 title="Aplicar tamanho e posição a todos os slides"
               >
                 <Layers size={12} /> Aplicar a Todos
@@ -905,7 +912,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
               value={slide.text}
               onChange={(e) => onUpdate({ text: e.target.value })}
               placeholder="Digite o texto principal aqui..."
-              className="w-full bg-[#1F2833] border border-white/10 rounded-xl p-3.5 text-sm text-zinc-200 focus:border-[#66FCF1] outline-none resize-none h-24 transition-colors"
+              className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3.5 text-sm text-zinc-200 focus:border-indigo-500 outline-none resize-none h-24 transition-colors"
             />
             <p className="text-[10px] text-zinc-500 mt-1">Dica: Envolva palavras com *asteriscos* para aplicar a cor de destaque.</p>
           </div>
@@ -913,52 +920,65 @@ const SlideCard: React.FC<SlideCardProps> = ({
           <div>
             <label className="text-xs font-medium text-zinc-400 mb-2 flex items-center justify-between">
               <span>Tamanho da Fonte</span>
-              <span className="text-zinc-500">{slide.fontSize}px</span>
             </label>
-            <input 
-              type="range" 
-              min="40" 
-              max="150" 
-              value={slide.fontSize} 
-              onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
-              className="w-full accent-[#45A29E]"
-            />
+            <div className="flex items-center gap-3">
+              <input 
+                type="range" 
+                min="40" 
+                max="150" 
+                value={slide.fontSize} 
+                onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+                className="flex-1 accent-indigo-500"
+              />
+              <input 
+                type="number" 
+                min="40" 
+                max="150" 
+                value={slide.fontSize} 
+                onChange={(e) => onUpdate({ fontSize: Number(e.target.value) })}
+                className="w-16 bg-zinc-900 border border-white/10 rounded-lg p-1.5 text-sm text-center text-zinc-200 outline-none focus:border-indigo-500"
+              />
+            </div>
           </div>
 
           <div>
             <label className="text-xs font-medium text-zinc-400 mb-2 flex items-center justify-between">
               <span>Largura do Texto (Quebra de Linha)</span>
-              <span className="text-zinc-500">{Math.round((slide.textWidth || 0.85) * 100)}%</span>
             </label>
-            <input 
-              type="range" 
-              min="0.4" 
-              max="1.0" 
-              step="0.05"
-              value={slide.textWidth || 0.85} 
-              onChange={(e) => onUpdate({ textWidth: Number(e.target.value) })}
-              className="w-full accent-[#45A29E]"
-            />
+            <div className="flex items-center gap-3">
+              <input 
+                type="range" 
+                min="0.4" 
+                max="1.0" 
+                step="0.01"
+                value={slide.textWidth || 0.85} 
+                onChange={(e) => onUpdate({ textWidth: Number(e.target.value) })}
+                className="flex-1 accent-indigo-500"
+              />
+              <div className="w-16 bg-zinc-900 border border-white/10 rounded-lg p-1.5 text-sm text-center text-zinc-200 flex items-center justify-center">
+                {Math.round((slide.textWidth || 0.85) * 100)}%
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Controles da Imagem */}
-        <div className="flex flex-col gap-4 bg-[#0B0C10]/50 p-4 rounded-2xl border border-white/5">
+        <div className="flex flex-col gap-4 bg-zinc-950/50 p-4 rounded-2xl border border-white/5">
           <div className="flex justify-between items-center">
-            <label className="text-xs font-bold text-[#45A29E] uppercase tracking-widest flex items-center gap-2">
+            <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
               <ImageIcon size={14} /> Recorte da Imagem
             </label>
-            <div className="flex gap-2">
+            <div className="flex justify-end gap-2">
               <button 
                 onClick={() => onUpdate({ imageOffsetX: 0, imageOffsetY: 0 })}
-                className="text-xs bg-[#1F2833] hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
+                className="text-xs bg-zinc-900 hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
                 title="Centralizar imagem"
               >
                 <AlignCenter size={12} /> Centralizar
               </button>
               <button 
                 onClick={() => onUpdate({ imageScale: 1, imageOffsetX: 0, imageOffsetY: 0 })}
-                className="text-xs bg-[#1F2833] hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
+                className="text-xs bg-zinc-900 hover:bg-white/10 text-zinc-300 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 border border-white/5"
                 title="Reiniciar recortes"
               >
                 <RotateCcw size={12} />
@@ -966,72 +986,78 @@ const SlideCard: React.FC<SlideCardProps> = ({
             </div>
           </div>
           
-          <div>
-            <div className="flex justify-between mb-2">
-              <label className="text-xs font-medium text-zinc-400">Zoom</label>
-              <span className="text-xs text-zinc-500">{slide.imageScale?.toFixed(2) || '1.00'}x</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <button onClick={() => onUpdate({ imageScale: Math.max(0.5, (slide.imageScale || 1) - 0.05) })} className="text-zinc-400 hover:text-white"><Minus size={16}/></button>
-              <input 
-                type="range" 
-                min="0.5" 
-                max="3" 
-                step="0.05"
-                value={slide.imageScale || 1} 
-                onChange={(e) => onUpdate({ imageScale: Number(e.target.value) })}
-                className="flex-1 accent-[#45A29E]"
-              />
-              <button onClick={() => onUpdate({ imageScale: Math.min(3, (slide.imageScale || 1) + 0.05) })} className="text-zinc-400 hover:text-white"><Plus size={16}/></button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4">
+          <div className="flex flex-col gap-4 pt-2 border-t border-white/5">
             <div>
-              <label className="text-xs font-medium text-zinc-400 mb-2 block">Posição X</label>
+              <div className="flex justify-between mb-2">
+                <label className="text-xs font-medium text-zinc-400">Zoom</label>
+                <span className="text-xs text-zinc-500">{slide.imageScale?.toFixed(2) || '1.00'}x</span>
+              </div>
               <div className="flex items-center gap-3">
-                <button onClick={() => onUpdate({ imageOffsetX: (slide.imageOffsetX || 0) - 10 })} className="text-zinc-400 hover:text-white"><Minus size={16}/></button>
+                <button onClick={() => onUpdate({ imageScale: Math.max(0.5, (slide.imageScale || 1) - 0.05) })} className="text-zinc-400 hover:text-white"><Minus size={16}/></button>
                 <input 
                   type="range" 
-                  min="-1000" 
-                  max="1000" 
-                  value={slide.imageOffsetX || 0} 
-                  onChange={(e) => onUpdate({ imageOffsetX: Number(e.target.value) })}
-                  className="flex-1 accent-[#45A29E]"
+                  min="0.5" 
+                  max="3" 
+                  step="0.05"
+                  value={slide.imageScale || 1} 
+                  onChange={(e) => onUpdate({ imageScale: Number(e.target.value) })}
+                  className="flex-1 accent-indigo-500"
                 />
-                <button onClick={() => onUpdate({ imageOffsetX: (slide.imageOffsetX || 0) + 10 })} className="text-zinc-400 hover:text-white"><Plus size={16}/></button>
+                <button onClick={() => onUpdate({ imageScale: Math.min(3, (slide.imageScale || 1) + 0.05) })} className="text-zinc-400 hover:text-white"><Plus size={16}/></button>
               </div>
             </div>
-            <div>
-              <label className="text-xs font-medium text-zinc-400 mb-2 block">Posição Y</label>
-              <div className="flex items-center gap-3">
-                <button onClick={() => onUpdate({ imageOffsetY: (slide.imageOffsetY || 0) - 10 })} className="text-zinc-400 hover:text-white"><Minus size={16}/></button>
-                <input 
-                  type="range" 
-                  min="-1000" 
-                  max="1000" 
-                  value={slide.imageOffsetY || 0} 
-                  onChange={(e) => onUpdate({ imageOffsetY: Number(e.target.value) })}
-                  className="flex-1 accent-[#45A29E]"
-                />
-                <button onClick={() => onUpdate({ imageOffsetY: (slide.imageOffsetY || 0) + 10 })} className="text-zinc-400 hover:text-white"><Plus size={16}/></button>
+
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="text-xs font-medium text-zinc-400 mb-2 block">Posição X</label>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => onUpdate({ imageOffsetX: (slide.imageOffsetX || 0) - 10 })} className="text-zinc-400 hover:text-white"><Minus size={16}/></button>
+                  <input 
+                    type="range" 
+                    min="-1000" 
+                    max="1000" 
+                    value={slide.imageOffsetX || 0} 
+                    onChange={(e) => onUpdate({ imageOffsetX: Number(e.target.value) })}
+                    className="flex-1 accent-indigo-500"
+                  />
+                  <button onClick={() => onUpdate({ imageOffsetX: (slide.imageOffsetX || 0) + 10 })} className="text-zinc-400 hover:text-white"><Plus size={16}/></button>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-zinc-400 mb-2 block">Posição Y</label>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => onUpdate({ imageOffsetY: (slide.imageOffsetY || 0) - 10 })} className="text-zinc-400 hover:text-white"><Minus size={16}/></button>
+                  <input 
+                    type="range" 
+                    min="-1000" 
+                    max="1000" 
+                    value={slide.imageOffsetY || 0} 
+                    onChange={(e) => onUpdate({ imageOffsetY: Number(e.target.value) })}
+                    className="flex-1 accent-indigo-500"
+                  />
+                  <button onClick={() => onUpdate({ imageOffsetY: (slide.imageOffsetY || 0) + 10 })} className="text-zinc-400 hover:text-white"><Plus size={16}/></button>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Toggle de Rodapé */}
-        <div className="flex items-center justify-between bg-[#0B0C10]/50 p-4 rounded-2xl border border-white/5">
-          <label className="text-sm font-medium text-zinc-300">Exibir Rodapé</label>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="sr-only peer" 
-              checked={slide.showFooter !== false} 
-              onChange={() => onUpdate({ showFooter: slide.showFooter === false ? true : false })} 
-            />
-            <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#45A29E]"></div>
-          </label>
+        <div className="flex flex-col gap-4 bg-zinc-950/50 p-4 rounded-2xl border border-white/5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+              Rodapé
+            </label>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input 
+                type="checkbox" 
+                className="sr-only peer" 
+                checked={slide.showFooter !== false} 
+                onChange={() => onUpdate({ showFooter: slide.showFooter === false ? true : false })} 
+              />
+              <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-500"></div>
+            </label>
+          </div>
         </div>
       </div>
     </motion.div>
