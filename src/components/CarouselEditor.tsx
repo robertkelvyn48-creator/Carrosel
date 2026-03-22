@@ -84,6 +84,9 @@ export const CarouselEditor: React.FC = () => {
   const [customFontUrl, setCustomFontUrl] = useState<string | null>(() => {
     return localStorage.getItem('carousel_customFont') || null;
   });
+  const [overlayColor, setOverlayColor] = useState(() => {
+    return localStorage.getItem('carousel_overlayColor') || '#000000';
+  });
   const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -120,6 +123,7 @@ export const CarouselEditor: React.FC = () => {
       localStorage.setItem('carousel_footerText', footerText);
       localStorage.setItem('carousel_footerFontSize', String(footerFontSize));
       localStorage.setItem('carousel_globalFont', globalFont);
+      localStorage.setItem('carousel_overlayColor', overlayColor);
       if (customFontUrl) {
         try {
           localStorage.setItem('carousel_customFont', customFontUrl);
@@ -130,7 +134,7 @@ export const CarouselEditor: React.FC = () => {
         localStorage.removeItem('carousel_customFont');
       }
     }
-  }, [aspectRatio, showLogo, footerText, footerFontSize, globalFont, customFontUrl, isLoaded]);
+  }, [aspectRatio, showLogo, footerText, footerFontSize, globalFont, overlayColor, customFontUrl, isLoaded]);
 
   useEffect(() => {
     if (customFontUrl) {
@@ -350,6 +354,23 @@ export const CarouselEditor: React.FC = () => {
           </div>
 
           <div>
+            <label className="text-sm font-medium text-zinc-300 mb-2 block">Cor do Fundo (Sombra)</label>
+            <div className="relative">
+              <select 
+                value={overlayColor} 
+                onChange={(e) => setOverlayColor(e.target.value)}
+                className="w-full bg-zinc-950 p-3.5 rounded-xl border border-white/10 text-zinc-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all appearance-none"
+              >
+                <option value="#000000">Preto Puro (#000000)</option>
+                <option value="#0f0f0f">Chumbo Escuro (#0f0f0f)</option>
+                <option value="#18181b">Grafite (#18181b)</option>
+                <option value="#262626">Cinza Escuro (#262626)</option>
+              </select>
+              <Layers className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" size={18} />
+            </div>
+          </div>
+
+          <div>
             <label className="text-sm font-medium text-zinc-300 mb-2 block">Proporção do Carrossel</label>
             <div className="relative">
               <select 
@@ -476,6 +497,7 @@ export const CarouselEditor: React.FC = () => {
                     footerText={footerText}
                     footerFontSize={footerFontSize}
                     globalFont={globalFont}
+                    overlayColor={overlayColor}
                     customFontUrl={customFontUrl}
                     onRemove={() => removeSlide(slide.id)}
                     onUpdate={(updates) => handleUpdateSlide(slide.id, updates)}
@@ -591,12 +613,22 @@ interface SlideCardProps {
   footerText: string;
   footerFontSize: number;
   globalFont: string;
+  overlayColor: string;
   customFontUrl: string | null;
   onRemove: () => void; 
   onUpdate: (updates: Partial<Slide>) => void;
   onApplyStyleToAll: () => void;
   canvasRef: (el: HTMLCanvasElement | null) => void;
 }
+
+const hexToRgb = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 0, g: 0, b: 0 };
+};
 
 const SlideCard: React.FC<SlideCardProps> = ({ 
   slide, 
@@ -607,6 +639,7 @@ const SlideCard: React.FC<SlideCardProps> = ({
   footerText,
   footerFontSize,
   globalFont,
+  overlayColor,
   customFontUrl,
   onRemove, 
   onUpdate,
@@ -802,20 +835,27 @@ const SlideCard: React.FC<SlideCardProps> = ({
         let currentY = groupBottomY - totalGroupHeight;
         const groupTop = currentY;
 
-        // 2. Sombra/Gradiente Escuro para esconder o texto original (reduzido)
-        const solidStart = groupTop + 40; // Começa o preto sólido mais abaixo
-        const gradientHeight = 80; // Altura do degradê menor
+        // 2. Sombra/Gradiente Escuro para esconder o texto original (suavizado)
+        const solidStart = groupTop + 60; // Começa o preto sólido mais abaixo para cobrir bem
+        const gradientHeight = 400; // Altura do degradê muito maior para transição suave
         const gradientStart = solidStart - gradientHeight;
 
+        const rgb = hexToRgb(overlayColor);
+        const colorBase = `${rgb.r}, ${rgb.g}, ${rgb.b}`;
+
         const gradient = ctx.createLinearGradient(0, gradientStart, 0, solidStart);
-        gradient.addColorStop(0, 'rgba(0,0,0,0)');
-        gradient.addColorStop(1, 'rgba(0,0,0,1)');
+        // Múltiplos color stops para criar uma curva de easing natural (não linear)
+        gradient.addColorStop(0, `rgba(${colorBase}, 0)`);
+        gradient.addColorStop(0.3, `rgba(${colorBase}, 0.1)`);
+        gradient.addColorStop(0.6, `rgba(${colorBase}, 0.4)`);
+        gradient.addColorStop(0.8, `rgba(${colorBase}, 0.7)`);
+        gradient.addColorStop(1, `rgba(${colorBase}, 1)`);
         
         ctx.fillStyle = gradient;
         ctx.fillRect(0, gradientStart, canvas.width, gradientHeight);
         
-        // Preenchimento sólido preto na parte inferior
-        ctx.fillStyle = 'black';
+        // Preenchimento sólido na parte inferior
+        ctx.fillStyle = overlayColor;
         ctx.fillRect(0, solidStart, canvas.width, canvas.height - solidStart);
 
         // 4. Desenha a Marca d'água (Logo ou Texto Padrão)
@@ -1086,6 +1126,13 @@ const SlideCard: React.FC<SlideCardProps> = ({
           <div>
             <label className="text-xs font-medium text-zinc-400 mb-2 flex items-center justify-between">
               <span>Tamanho da Fonte</span>
+              <button
+                onClick={() => onUpdate({ offsetX: 0, offsetY: 0, fontSize: 84 })}
+                className="text-[10px] text-zinc-500 hover:text-indigo-400 flex items-center gap-1 transition-colors"
+                title="Resetar Posição e Tamanho"
+              >
+                <RotateCcw size={12} /> Resetar
+              </button>
             </label>
             <div className="flex items-center gap-3">
               <input 
